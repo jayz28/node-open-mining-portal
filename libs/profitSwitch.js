@@ -1,14 +1,16 @@
 var async  = require('async');
-var net    = require('net');
+var net = require('net');
 var bignum = require('bignum');
 var algos  = require('stratum-pool/lib/algoProperties.js');
 var util   = require('stratum-pool/lib/util.js');
+var redis = require('redis');
 
 var Cryptsy  = require('./apiCryptsy.js');
 var Poloniex = require('./apiPoloniex.js');
 var Mintpal  = require('./apiMintpal.js');
 var Bittrex  = require('./apiBittrex.js');
-var Stratum  = require('stratum-pool');
+var Stratum = require('stratum-pool');
+
 
 module.exports = function(logger){
 
@@ -18,7 +20,7 @@ module.exports = function(logger){
     var poolConfigs = JSON.parse(process.env.pools);
 
     var logSystem = 'Profit';
-
+    var redisClient = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
     // 
     // build status tracker for collecting coin market information
     //
@@ -585,6 +587,7 @@ module.exports = function(logger){
 
             Object.keys(profitStatus[algo]).forEach(function(symbol) {
                 var coinStatus = profitStatus[algo][symbol];
+                
 
                 Object.keys(coinStatus.exchangeInfo).forEach(function(exchange){
                     var exchangeData = coinStatus.exchangeInfo[exchange];
@@ -597,6 +600,7 @@ module.exports = function(logger){
                         }
                         coinStatus.btcPerMhPerHour = btcPerMhPerHour;
                         logger.debug(logSystem, 'CALC', 'BTC/' + symbol + ' on ' + exchange + ' with ' + coinStatus.btcPerMhPerHour.toFixed(8) + ' BTC/day per Mh/s');
+                        redisClient.hset('profitability:BTC:' + algo + ':' + symbol, exchange, coinStatus.btcPerMhPerHour.toFixed(8));
                     }
                     if (exchangeData.hasOwnProperty('LTC') && exchangeData['LTC'].hasOwnProperty('weightedBid')){
                         var btcPerMhPerHour = (exchangeData['LTC'].weightedBid * coinStatus.coinsPerMhPerHour) * exchangeData['LTC'].ltcToBtc;
@@ -607,11 +611,12 @@ module.exports = function(logger){
                         }
                         coinStatus.btcPerMhPerHour = btcPerMhPerHour;
                         logger.debug(logSystem, 'CALC', 'LTC/' + symbol + ' on ' + exchange + ' with ' + coinStatus.btcPerMhPerHour.toFixed(8) + ' BTC/day per Mh/s');
+                        redisClient.hset('profitability:LTC:' + algo + ':' + symbol, exchange, coinStatus.btcPerMhPerHour.toFixed(8));
                     }
                 });
             });
             logger.debug(logSystem, 'RESULT', 'Best coin for ' + algo + ' is ' + bestCoin + ' on ' + bestExchange + ' with ' + bestBtcPerMhPerHour.toFixed(8) + ' BTC/day per Mh/s');
-
+           
 
             var client = net.connect(portalConfig.cliPort, function () {
                 client.write(JSON.stringify({
