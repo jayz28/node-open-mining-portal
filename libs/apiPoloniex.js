@@ -38,7 +38,7 @@ module.exports = function() {
     }
 
     // If a site uses non-trusted SSL certificates, set this value to false
-    Poloniex.STRICT_SSL = true;
+    Poloniex.STRICT_SSL = false;
 
     // Helper methods
     function joinCurrencies(currencyA, currencyB){
