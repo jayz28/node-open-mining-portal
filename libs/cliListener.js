@@ -4,14 +4,14 @@ var net = require('net');
 var listener = module.exports = function listener(port){
 
     var _this = this;
-
+    var host = '10.0.2.4';
     var emitLog = function(text){
         _this.emit('log', text);
     };
 
 
-    this.start = function(){
-        net.createServer(function(c) {
+    this.start = function () {
+        var handler = function (c) {
 
             var data = '';
             try {
@@ -19,7 +19,7 @@ var listener = module.exports = function listener(port){
                     data += d;
                     if (data.slice(-1) === '\n') {
                         var message = JSON.parse(data);
-                        _this.emit('command', message.command, message.params, message.options, function(message){
+                        _this.emit('command', message.command, message.params, message.options, function (message) {
                             c.end(message);
                         });
                     }
@@ -28,15 +28,21 @@ var listener = module.exports = function listener(port){
 
                 });
                 c.on('error', function () {
-                    
+
                 });
             }
-            catch(e){
+            catch (e) {
                 emitLog('CLI listener failed to parse message ' + data);
             }
 
-        }).listen(port, '127.0.0.1', function() {
-            emitLog('CLI listening on port ' + port)
+        };
+
+        net.createServer(handler).listen(port, host , function() {
+            emitLog('CLI listening on ' + host  + 'port ' + port)
+        });
+
+        net.createServer(handler).listen(port, '127.0.0.1', function () {
+            emitLog('CLI listening on 127.0.0.1 port ' + port)
         });
     }
 
