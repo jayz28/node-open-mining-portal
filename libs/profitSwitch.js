@@ -618,7 +618,7 @@ module.exports = function(logger){
             logger.debug(logSystem, 'RESULT', 'Best coin for ' + algo + ' is ' + bestCoin + ' on ' + bestExchange + ' with ' + bestBtcPerMhPerHour.toFixed(8) + ' BTC/day per Mh/s');
            
 
-            var client = net.connect(portalConfig.cliPort, function () {
+            var client = net.connect(portalConfig.cliPort, portalConfig.cliHost ,function () {
                 client.write(JSON.stringify({
                     command: 'coinswitch',
                     params: [bestCoin],

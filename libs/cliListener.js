@@ -1,10 +1,10 @@
 var events = require('events');
 var net = require('net');
 
-var listener = module.exports = function listener(port){
+var listener = module.exports = function listener(port, host){
 
     var _this = this;
-    var host = '10.0.2.4';
+    host = host || '127.0.0.1';
     var emitLog = function(text){
         _this.emit('log', text);
     };
@@ -39,10 +39,6 @@ var listener = module.exports = function listener(port){
 
         net.createServer(handler).listen(port, host , function() {
             emitLog('CLI listening on ' + host  + 'port ' + port)
-        });
-
-        net.createServer(handler).listen(port, '127.0.0.1', function () {
-            emitLog('CLI listening on 127.0.0.1 port ' + port)
         });
     }
 
